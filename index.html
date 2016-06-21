@@ -1,0 +1,291 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <title>Two Factor Authentication in Symfony</title>
+
+        <link rel="stylesheet" href="node_modules/reveal.js/css/reveal.css">
+        <link rel="stylesheet" href="node_modules/reveal.js/css/theme/solarized.css">
+        <link rel="stylesheet" href="node_modules/reveal.js/lib/css/monokai.css">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section>
+                    <h1>
+                        <p>✌️ Two-Factor Authentication
+                        <small>in Symfony</small>
+                    </h1>
+                </section>
+                <section>
+                    <section>
+                        <h2>What is Multiple Factor Authentication?</h2>
+                    </section>
+                    <section>
+                        <blockquote>Provide several separate pieces of evidence<br>to an authentication system</blockquote>
+                        <br/>
+                        <ul class="no">
+                            <li class="fragment">💭 Knowledge</li>
+                            <li class="fragment">🔑 Possession</li>
+                            <li class="fragment">🖐 Inherence</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Get money from an ATM</h2>
+                        <ul class="no">
+                            <li>🔑 Credit card</li>
+                            <li>💭 PIN</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Classic web login</h2>
+                        <ul class="no">
+                            <li>💭 Username</li>
+                            <li>💭 Password</li>
+                            <li class="fragment">🔑 Security Key</li>
+                        </ul>
+                    </section>
+                </section>
+                <section>
+                    <section>
+                        <h2>The Security Key</h2>
+                        <blockquote>A <strong>physical</strong> device<br> generating a <strong>disposable code</strong> that is<br>near <strong>impossible to spoof</strong>.</blockquote>
+                        <p class="fragment">Universal Second Factor <strong>U2F</strong> by <a href="https://fidoalliance.org/">FIDO</a></p>
+                    </section>
+                    <!--section>
+                        <img src="img/U2F.png">
+                    </section-->
+                    <section>
+                        <h3>The One-Time-Password</h3>
+                        <ul class="no">
+                            <li class="fragment">✅ Can be verified</li>
+                            <li class="fragment">👤 Includes key identity</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>One-Time-Password Authentication</h3>
+                        <br>
+                        <div class="row">
+                            <div class="column" style="width: 40%">
+                                <h4>Registration</h4>
+                                <ul class="no">
+                                    <li class="fragment">🔑 Assign a key to a user</li>
+                                </ul>
+                            </div>
+                            <div class="column" style="width: 60%">
+                                <h4>Login</h4>
+                                <ul class="no">
+                                    <li class="fragment">❓ Ask for an OTP</li>
+                                    <li class="fragment">✅ Validate the OTP</li>
+                                    <li class="fragment">↔️ Ensure OTP match user key</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+                <section>
+                    <section>
+                        <h2>Security in Symfony</h2>
+                    </section>
+                    <section>
+                        <h3>Token</h3>
+                        <blockquote>Hold the user's authentication information</blockquote>
+                        <p class="note">AnonymousToken,<br>UsernamePasswordToken,<br>RememberMeToken</p>
+                    </section>
+                    <section>
+                        <h3>AuthenticationProvider</h3>
+                        <blockquote>Create and authenticate Token</blockquote>
+                        <p class="note">
+                            Are the username and password valid?
+                            <br>Does the given cookie exists is session?
+                            <br>...
+                        </p>
+                    </section>
+                    <section>
+                        <h3>FirewallListener</h3>
+                        <blockquote>
+                            Capture the login requests,
+                            <br>call the authentication provider
+                            <br>and store the Token in the session.
+                        </blockquote>
+                        <p class="note">
+                            ✨ Where the magic operate ✨
+                        </p>
+                        <!--
+                        <p>UsernamePasswordFormAuthenticationListener: Checks if Request needs authentication, gets credentials from the request, ask the provider for an authenticated token</p>
+                        <p>ContextListener: get a token from session, ask the user provider to refresh the user</p>
+                        <p>ChannelListener: switch for the proper sheme HTTP/HTTPS</p>
+                        <p>RememberMe, Logout, ...</p>
+                        -->
+                    </section>
+                    <section>
+                        <h3>Factory</h3>
+                        <blockquote>Holds everything together and hook into the Security component</blockquote>
+                        <p class="note">Define configuration for <code>security.yml</code>!</p>
+                    </section>
+                </section>
+                <section>
+                    <section>
+                        <h2>Username + Password + OTP<br>authentication system</h2>
+                    </section>
+                    <section>
+                        <h3>UsernamePasswordOTPToken</h3>
+                        <p>Extends <code>UsernamePasswordToken</code> and adds a OneTimePassword attribute.</p>
+                        <pre><code class="php" data-trim data-noescape>class UsernamePasswordOTPToken extends UsernamePasswordToken {
+    /**
+     * @var string
+     */
+    private $oneTimePassword;
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __construct($user, $credentials, $oneTimePassword, $providerKey, array $roles = array())
+    {
+        parent::__construct($user, $credentials, $providerKey, $roles);
+
+        $this->oneTimePassword = $oneTimePassword;
+    }
+}</code></pre>
+                    </section>
+                    <section>
+                        <h2>Authenticate the token</h2>
+                        <p class="note"><code>SimpleFormAuthenticatorInterface</code> or full custom provider</p>
+                        <ul class="no">
+                            <li class="fragment">👤 Load the user by username</li>
+                            <li class="fragment">💭 Check if the provided password is valid</li>
+                            <li class="fragment">✅ Validate the OTP via Yubico third-party services</li>
+                            <li class="fragment">↔️ Ensure OTP key belongs to the user</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Sample implementation</h3>
+                         <pre><code class="php" data-trim data-noescape>class MyOtpSimpleFormAuthenticator implements SimpleFormAuthenticatorInterface {
+    /**
+     * {@inheritdoc}
+     */
+    public function authenticateToken(
+        TokenInterface $token,
+        UserProviderInterface $userProvider,
+        $providerKey
+    );
+}</code></pre></section>
+<section><pre><code class="php" data-trim data-noescape>
+// Check that the user exists.
+try {
+    $user = $userProvider->loadUserByUsername($token->getUsername());
+} catch (UsernameNotFoundException $e) {
+    throw new BadCredentialsException('User not found.');
+}
+
+// Check that the provided password is valid.
+if (!$this->encoder->isPasswordValid($user, $token->getCredentials())) {
+    throw new BadCredentialsException('The presented password is invalid.');
+}
+</code></pre></section>
+<section><pre><code class="php" data-trim data-noescape>
+$oneTimePassword = $token->getOneTimePassword();
+
+// Check that the provided one-time-password is valid.
+if (!$this->yubico->isValid($oneTimePassword)) {
+    throw new BadCredentialsException('Invalid OTP.');
+}
+
+// Check that the provided one-time-password belongs to the user.
+if ($this->getYubikey($user) !== $this->yubico->getIdentity($oneTimePassword)) {
+    throw new BadCredentialsException('Yubico identities mismatch.');
+}
+</code></pre></section>
+<section><pre><code class="php" data-trim data-noescape>
+// Everything's in order, move along.
+return new UsernamePasswordOTPToken(
+    $user,
+    $user->getPassword(),
+    $oneTimePassword,
+    $providerKey,
+    $user->getRoles()
+);
+</code></pre>
+                    </section>
+                    <section>
+                        <h1>
+                            <a href="http://127.0.0.1:8000" target="_blank">
+                                Demo Time!
+                            </a>
+                        </h1>
+                        <a href="https://github.com/Tom32i/symfony-yubikey-demo">
+                            github.com/tom32i/symfony-yubikey-demo
+                        </a>
+                    </section>
+                </section>
+                <section>
+                    <section>
+                        <h2>Going further...</h2>
+                    </section>
+                    <section>
+                        <h2>Two-Factor voter</h2>
+                        <p class="note">Protect sensitive part of your apps with mandatory Two-Factor Auth</p>
+                        <pre class="center-code" style="width: 66%;"><code class="php" class="hljs text">is_granted('IS_AUTHENTICATED_TWO_FACTOR')</code></pre>
+                    </section>
+                    <section>
+                        <h2>User Key Validator</h2>
+                        <p class="note">Ask for a OTP for a form to be valid<br>(just like <a href="http://symfony.com/doc/current/reference/constraints/UserPassword.html">UserPassword constraint</a>)</p>
+                    </section>
+                </section>
+                <section>
+                    <h2>Thanks for listening!</h2>
+
+                    <div class="credit">
+                        <p>Documentation</p>
+                        <a target="_blank" href="http://symfony.com/doc/current/book/security.html">
+                            Symfony Security
+                        </a>
+                        <a target="_blank" href="http://symfony.com/doc/current/cookbook/security/custom_authentication_provider.html">
+                            Custom Authentication Provider
+                        </a>
+                        <a target="_blank" href="http://symfony.com/doc/current/cookbook/security/custom_password_authenticator.html">
+                            Simple Form Authenticator
+                        </a>
+                        <a href="https://developers.yubico.com/OTP/Libraries/List_of_libraries.html">
+                            Yubico librairies
+                        </a>
+                    </div><div class="credit">
+                        <p>Sources</p>
+                        <a target="_blank" href="https://github.com/tom32i/talk-two-factor">
+                            tom32i/talk-two-factor
+                        </a>
+                        <a target="_blank" href="https://github.com/tom32i/symfony-yubikey-demo">
+                            tom32i/symfony-yubikey-demo
+                        </a>
+                    </div><div class="credit">
+                        <p>Questions and feedback?</p>
+                        <a target="_blank" href="https://twitter.com/Tom32i">
+                            @Tom32i
+                        </a>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <script src="node_modules/reveal.js/lib/js/head.min.js"></script>
+        <script src="node_modules/reveal.js/js/reveal.js"></script>
+
+        <script>
+            // More info https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                history: true,
+
+                // More info https://github.com/hakimel/reveal.js#dependencies
+                dependencies: [
+                    { src: 'node_modules/reveal.js/plugin/markdown/marked.js' },
+                    { src: 'node_modules/reveal.js/plugin/markdown/markdown.js' },
+                    { src: 'node_modules/reveal.js/plugin/notes/notes.js', async: true },
+                    { src: 'node_modules/reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+                ]
+            });
+        </script>
+    </body>
+</html>

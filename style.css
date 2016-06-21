@@ -1,0 +1,73 @@
+/* Base */
+
+body .reveal {
+    box-sizing: border-box;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+    text-transform: none;
+}
+
+.reveal blockquote {
+    background-color: white;
+}
+
+/* Notes */
+
+.reveal .note {
+    font-style: italic;
+    font-size: 0.6em;
+    color: #738f98;
+}
+
+/* Code */
+
+.reveal .center-code {
+    margin: 0 auto;
+    width: 50%;
+    text-align: center;
+}
+
+/* List */
+
+.reveal ul.no {
+    margin: 0;
+}
+
+.reveal ul.no li {
+    list-style: none;
+    margin: 0.5em;
+}
+
+/* Grid */
+
+.reveal .row,
+.reveal .row:after {
+    clear: both;
+}
+
+.reveal .row .column {
+    float: left;
+    width: 50%;
+    text-align: center;
+}
+
+/* Credits */
+
+.reveal .credit {
+    display: inline-block;
+    font-size: 0.6em;
+    width: 45%;
+    padding: 1em;
+    margin: 0;
+    vertical-align: top;
+    /*float: left;*/
+}
+.reveal .credit > * {
+    display: block;
+}
