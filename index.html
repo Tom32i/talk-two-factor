@@ -16,7 +16,7 @@
             <div class="slides">
                 <section>
                     <h1>
-                        <p>✌️ Two-Factor Authentication
+                        <p>✌️ Two-Factor Authentication</p>
                         <small>in Symfony</small>
                     </h1>
                 </section>
@@ -53,7 +53,7 @@
                     <section>
                         <h2>The Security Key</h2>
                         <blockquote>A <strong>physical</strong> device<br> generating a <strong>disposable code</strong> that is<br>near <strong>impossible to spoof</strong>.</blockquote>
-                        <p class="fragment">Universal Second Factor <strong>U2F</strong> by <a href="https://fidoalliance.org/">FIDO</a></p>
+                        <!--p class="fragment">Universal Second Factor <strong>U2F</strong> by <a href="https://fidoalliance.org/">FIDO</a></p-->
                     </section>
                     <!--section>
                         <img src="img/U2F.png">
@@ -69,13 +69,13 @@
                         <h3>One-Time-Password Authentication</h3>
                         <br>
                         <div class="row">
-                            <div class="column" style="width: 40%">
+                            <div class="column" style="width: 45%">
                                 <h4>Registration</h4>
                                 <ul class="no">
                                     <li class="fragment">🔑 Assign a key to a user</li>
                                 </ul>
                             </div>
-                            <div class="column" style="width: 60%">
+                            <div class="column" style="width: 55%">
                                 <h4>Login</h4>
                                 <ul class="no">
                                     <li class="fragment">❓ Ask for an OTP</li>
@@ -153,27 +153,17 @@
                     </section>
                     <section>
                         <h2>Authenticate the token</h2>
-                        <p class="note"><code>SimpleFormAuthenticatorInterface</code> or full custom provider</p>
+                        <p class="note"><code>SimpleForm</code>, <code>Guard</code> or full custom provider</p>
                         <ul class="no">
-                            <li class="fragment">👤 Load the user by username</li>
-                            <li class="fragment">💭 Check if the provided password is valid</li>
+                            <li>👤 Load the user by username</li>
+                            <li>💭 Check if the provided password is valid</li>
                             <li class="fragment">✅ Validate the OTP via Yubico third-party services</li>
                             <li class="fragment">↔️ Ensure OTP key belongs to the user</li>
                         </ul>
                     </section>
                     <section>
                         <h3>Sample implementation</h3>
-                         <pre><code class="php" data-trim data-noescape>class MyOtpSimpleFormAuthenticator implements SimpleFormAuthenticatorInterface {
-    /**
-     * {@inheritdoc}
-     */
-    public function authenticateToken(
-        TokenInterface $token,
-        UserProviderInterface $userProvider,
-        $providerKey
-    );
-}</code></pre></section>
-<section><pre><code class="php" data-trim data-noescape>
+                        <pre><code class="php" data-trim data-noescape>
 // Check that the user exists.
 try {
     $user = $userProvider->loadUserByUsername($token->getUsername());
@@ -231,7 +221,7 @@ return new UsernamePasswordOTPToken(
                         <pre class="center-code" style="width: 66%;"><code class="php" class="hljs text">is_granted('IS_AUTHENTICATED_TWO_FACTOR')</code></pre>
                     </section>
                     <section>
-                        <h2>User Key Validator</h2>
+                        <h2>UserSecurityKey Constraint</h2>
                         <p class="note">Ask for a OTP for a form to be valid<br>(just like <a href="http://symfony.com/doc/current/reference/constraints/UserPassword.html">UserPassword constraint</a>)</p>
                     </section>
                 </section>
